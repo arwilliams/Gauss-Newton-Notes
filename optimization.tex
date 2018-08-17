@@ -1,0 +1,120 @@
+\documentclass{amsart}
+\usepackage[toc,page]{appendix}
+\usepackage{amsmath}
+
+\DeclareMathOperator*{\argmin}{arg\,min\,}
+\DeclareMathOperator*{\argmax}{arg\,max\,}
+
+\title{Gauss-Newton Optimization}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+\section{General Unconstrained Optimization in Euclidean Spaces}
+\subsection{The General Unconstrained Problem}
+\subsection{The Newton Direction}
+\subsection{Trust Region Methods}
+\subsection{Convergence Theory}
+
+\section{Gauss-Newton in Euclidean Spaces}
+\subsection{The Gauss-Newton Method}
+\subsection{Maximum Likelihood Formulation}
+\subsection{Levenberg-Marquardt Damping}
+\subsection{Robust Loss Functions}
+\subsection{Convergence Theory}
+
+\section{Extension to Manifolds}
+
+\section{Implementation Concerns}
+\subsection{Sparsity of Large-Scale Problems}
+\subsection{Variable Elimination Orderings}
+% ^ see wikipedia pages for Variable Elimination and Factor graph
+\subsection{Gauge Freedom}
+\subsection{Poorly Conditioned Problems}
+\subsection{Observability}
+
+\appendix
+
+\section{Linear Least-Squares Methods}
+\subsection{The Linear Problem}
+
+\emph{Generalized linear least-squares} is a technique for solving the problem
+\label{glls}
+\begin{equation}
+    x^* = \argmin_{x \in \mathbb R^n} \frac12 \| Ax - y\|_\Sigma^2,
+\end{equation}
+where $A \in \mathbb R^{m \times n}$, $y \in \mathbb R^m$, $\Sigma \in \mathbb R^{m \times m}$
+is a symmetric, positive-definite matrix, and $\| z \|_\Sigma = (z^T \Sigma^{-1} z)^{1/2}$ is the
+Mahalanobis norm on $\mathbb R^m$ induced by $\Sigma$. Differentiating (\ref{glls}) with respect
+to $x$ and setting to zero yields the \textbf{normal equations}
+\label{normal}
+\begin{equation}
+    A^T \Sigma^{-1} A x = A^T \Sigma^{-1} y.
+\end{equation}
+The matrix $A^T \Sigma^{-1} A$ is non-singular if and only if $A$ has full column rank. In this
+case, the problem is said to be \emph{well-posed}, or \emph{observable}.
+Clearly, if the problem is observable, then there is an analytic solution
+$x^* = (A^T \Sigma^{-1} A)^{-1} A^T \Sigma^{-1} y$. We discuss this case first.
+
+\subsection{Matrix Factorization Solutions}
+Assuming that $A^T \Sigma^{-1} A$ is non-singular, solving (\ref{normal}) amounts to inverting a
+symmetric positive-definite matrix. There are various methods for accomplishing this:
+\begin{itemize}
+    \item A real matrix $M$ is symmetric and positive-definite if and only if it admits
+    a \textbf{Cholesky decomposition}
+    $$
+    M = LL^T,
+    $$
+    where $L$ is a non-singular, lower-triangular matrix. Using Cholesky decomposition to solve
+    $Mx = b$ goes as follows:
+    \begin{enumerate}
+        \item Factor $M = LL^T$.
+        \item Solve $Ly = b$ for $y$ by forward substitution.
+        \item Solve $L^Tx = y$ for $x$ by back substitution.
+    \end{enumerate}
+    The Cholesky decomposition has a drawback when used for GLLS, namely that
+    $$
+    \kappa(A^T \Sigma^{-1} A) \sim \kappa(A)^2,
+    $$
+    where $\kappa(A) = \sigma_{\max}(A) / \sigma_{\min}(A) = \| A^{-1}\| \|A\|$ is the condition
+    number of the matrix, measuring the maximum possible error in $y$ relative to $x$ given
+    $y = Ax$. Hence
+    a poorly conditioned $A$ can lead easily to a very poorly conditioned $A^T \Sigma^{-1} A$, which
+    can be a problem when solving numerical problems.
+
+    \item 
+\end{itemize}
+
+\subsection{Conjugate Gradient Solution}
+\subsection{Regularization of Degenerate Problems}
+
+\section{Lagrange Multipliers}
+
+\section {$M$-Estimators}
+
+\section{Matrix Calculus}
+
+\section{Differential Geometry}
+\subsection{Differentiable Manifolds}
+\subsection{Riemannian Geometry}
+\subsection{The Exponential Map and Normal Coordinates}
+
+\section{Lie Groups}
+
+\begin{thebibliography}{999}
+
+\bibitem{nocedal}
+Nocedal \& Wright,
+\emph{Numerical Optimization}.
+Springer Series In Optimization Research,
+Second Edition,
+2006.
+
+\end{thebibliography}
+
+\end{document}
