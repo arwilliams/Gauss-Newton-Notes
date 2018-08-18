@@ -82,12 +82,21 @@ symmetric positive-definite matrix. There are various methods for accomplishing 
     \kappa(A^T \Sigma^{-1} A) \sim \kappa(A)^2,
     $$
     where $\kappa(A)$ is the condition
-    number of the matrix, measuring the maximum possible error in $y$ relative to $x$ given
-    $y = Ax$. Hence
+    number of the matrix, measuring the maximum possible error in $Ax$ relative to $x$. Hence
     a poorly conditioned $A$ can lead easily to a very poorly conditioned $A^T \Sigma^{-1} A$, which
     can be a problem when solving numerical problems.
 
-    \item 
+\item Any real matrix in $\mathbb R^{m \times n}$ for which $m \ge n$ admits
+    a \textbf{QR decomposition}
+        $$
+            A = QR = Q \begin{bmatrix} R_1 \\ 0 \end{bmatrix}
+                = \begin{bmatrix} Q_1 & Q_2 \end{bmatrix}
+                    \begin{bmatrix} R_1 \\ 0 \end{bmatrix}
+                        = Q_1 R_1,
+        $$
+    where $R_1 \in \mathbb R^{n \times n}$ is upper-triangular, and
+    $Q_1 \in \mathbb R^{m \times n}$ and $Q_2 \in \mathbb R^{m \times(m-n)}$
+    have orthogonal columns.
 \end{itemize}
 
 \subsection{Conjugate Gradient Solution}
