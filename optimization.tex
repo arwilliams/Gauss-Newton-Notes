@@ -1,11 +1,16 @@
-\documentclass{amsart}
+\documentclass[reqno]{amsart}
 \usepackage[toc,page]{appendix}
-\usepackage{amsmath}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\baselineskip}
 
 \DeclareMathOperator*{\argmin}{arg\,min\,}
 \DeclareMathOperator*{\argmax}{arg\,max\,}
 
+\numberwithin{equation}{section}
+
 \title{Gauss-Newton Optimization}
+\author{Adam Williams}
 
 \begin{document}
 
@@ -40,69 +45,351 @@
 
 \appendix
 
+\section{Calculus on Euclidean Spaces}
+
+\subsection{Differentiable Functions}
+
+A function $f : U \subseteq \mathbb R^m \to \mathbb R^n$ is \textbf{differentiable} at $x \in U$
+if there exists a linear map $A : \mathbb R^m \to \mathbb R^n$ such that
+$$
+    \lim_{\|v\| \to 0} \frac{\|f(x + v) - f(x) - A v\|}{\|v\|} = 0.
+$$
+That is, $f$ may be approximated to first order near $x$ by $A$:
+$$
+    f(x+v) = f(x) + A v + o(\|v\|),
+$$
+using Landau notation. If the linear map $A$ exists, it is called the \textbf{differential}
+of $f$ at $x$, and is denoted $df_x$. The value $df_x v$ can be thought of as the
+\textbf{directional derivative} of $f$ at $x$ along $v$, and in fact
+$$
+    df_x v = \left.\frac{d}{dt}\right|_{t=0}f(x + tv).
+$$
+
+With respect to the standard bases, the matrix differential is given
+by the matrix of partial derivatives, which is called the \textbf{Jacobian matrix}:
+$$
+    [df_x] = J(f)x =
+        \frac{\partial f }{\partial x^T} =
+        \begin{bmatrix} \frac{\partial f_1}{\partial x_1} & \cdots & \frac{\partial f_1}{\partial x_n} \\
+        \vdots & \ddots & \vdots \\ 
+        \frac{\partial f_m}{\partial x_1} & \cdots & \frac{\partial f_m}{\partial x_n}
+        \end{bmatrix}
+$$
+
+Formally, $df_x$ should be seen not as a linear map on $\mathbb R^n$, but
+as a linear map on the ``copy'' of $\mathbb R^n$ whose origin is at $x$, otherwise known as
+the \emph{tangent space} $T_x \mathbb R^n$. Since $T_x \mathbb R^n \cong \mathbb R^n$, we
+drop this formalism for Euclidean spaces. See the section below on differentable manifolds.
+
+\subsection{Twice-differentiable Functions}
+
+If $f$ is differentable on all of its domain $U$, then we can consider the map
+$df : U \to L(\mathbb R^n, \mathbb R^m)$ given by $x \mapsto df_x$. We can also consider the
+differentiability of this map: naturally, $d^2f_x$ should be a linear transformation from
+$\mathbb R^n$ to $L(\mathbb R^n, \mathbb R^m)$. Making the natural association between
+$L(\mathbb R^n, L(\mathbb R^n, \mathbb R^m)$ and the space of bilinear maps
+$L^2(\mathbb R^n \times \mathbb R^n, \mathbb R^m)$, we say that $f$ is twice-differentiable
+at $x$ if there exists a bilinear map $B: \mathbb R^n \times \mathbb R^n \to \mathbb R^m$ such that
+$$
+    \lim_{w \to 0} \frac{\|df_{x+w} v - df_x v - B(v, w) \|}{\|w\|} = 0
+$$
+uniformly over bounded subsets of $\mathbb R^n$. If such a $B$ exists, it is called the
+second derivative of $f$ at $x$ and is denoted $d^2 f_x$. It can be thought of as a
+second directional derivative:
+\begin{align*}
+    d^2f_x(v, w) &= \left. \frac{d}{ds} \right|_{s=0} df_{x + sw}v \\
+        &= \left. \frac{d^2}{dsdt} \right|_{s,t=0} f(x + sw + tv).
+\end{align*}
+
+Note that $d^2f_x \in L^2(\mathbb R^n \times \mathbb R^n, \mathbb R^m)$ can be viewed as
+a type-$(2, 1)$ tensor, i.e. $d^2f_x \in \mathbb R^n \otimes \mathbb R^n \otimes (\mathbb R^m)^*$.
+With respect to the standard bases, it can be specified by each of the
+$m$ values that it takes on each of the $n^2$ basis vector pairs $(e_i, e_j)$. Using tensor
+notation:
+$$
+    [d^2f_x]_{ij}^k = d^2f_x(e_i,e_j)_k = \frac{\partial^2 f_k}{\partial x_i \partial x_j},
+$$
+so that the $k$-th component $f_k$ is given by the \textbf{Hessian matrix}:
+$$
+    d^2f_x(v,w)_k = v^T  H(f_k)_x w,
+$$
+where
+$$
+    H(g)_x = \frac{\partial^2 g}{\partial x x^T} =
+        \begin{bmatrix} \frac{\partial^2 g}{\partial x_1^2} & \cdots & \frac{\partial^2 g}{\partial x_1 \partial x_n} \\
+        \vdots & \ddots & \vdots \\ 
+        \frac{\partial^2 g}{\partial x_n \partial x_1} & \cdots & \frac{\partial^2 g}{\partial x_n^2} \\
+        \end{bmatrix}
+$$
+In the case where the second partial derivatives are continuous, they commute, and thus
+the Hessian is symmetric.
+
+\subsection{Calculus of Real-Valued Functions}
+
+\subsubsection{The Differential and Gradient}
+
+Now we consider the special case where $m=1$, i.e. $f: \mathbb R^n \to \mathbb R$. With an
+eye on generalizing to manifolds, we use the suggestive notation $\frac{\partial}{\partial x_i}$
+for the standard basis for $\mathbb R^n$, and $dx_i$ for its corresponding dual basis. Using
+this notation, we can express the differential $df_x$ as a covector:
+$$
+    df_x = \sum_{i=1}^n \frac{\partial f}{\partial x_i} dx_i.
+$$
+
+The \textbf{gradient} of $f$ is defined as the dual of the the differential,
+and is denoted $\nabla f(x) \in \mathbb R^n$, so that
+$$
+    \nabla f(x)^Tv = df_x v
+$$
+for all $v$. The gradient is given in standard basis coordinates as
+$$
+    \nabla f(x) = (df_x)^{\sharp} = \left(\frac{\partial f}{\partial x^T}\right)^T = \sum_{i=1}^n \frac{\partial f}{\partial x_i} \frac{\partial}{\partial x_i},
+$$
+The gradient can be interpreted as the vector field pointing in the
+\emph{direction of steepest ascent} of $f$, which can be observed by noting that the directional
+derivative $\nabla f(x)^T v$ is maximized when $v$ is parallel to $\nabla f(x)$.
+
+\subsubsection{The Second Derivative and the Hessian}
+
+Also note that in the $m=1$ case, the second derivative $d^2f_x$ is simply a biliear form
+on $\mathbb R^n$, and is fully described by the Hessian matrix $H(f)_x =
+\frac{\partial^2 f}{\partial x x ^T}$. Using tensor notation, we can write the second derivative
+in terms of the basis covectors:
+$$
+    d^2f_x = H(f)_x = \sum_{i,j} \frac{\partial f}{\partial x_i \partial x_j} dx_i \otimes dx_j.
+$$
+In this context, the Hessian is often denoted $\nabla^2f(x)$, and this notation can be made
+rigorous using the machinery of differential geometry.
+
+\subsubsection{Taylor's Theorem}
+
+For one-variable functions $g : \mathbb R \to \mathbb R$, \textbf{Taylor's Theorem} states
+that if $g$ is $k$ times differentable at $a$, then $g$ can be approximated to $k$-th
+order by its Taylor polynomial: There exists a function $h_k : \mathbb R \to \mathbb R$ such
+$$
+    f(a+h) = f(a) + f'(a)h + \frac12 f''(a)h^2 + \cdots + \frac{1}{k!} f^{(k)}(a) h^k +
+        o(|h|^k).
+$$
+We can derive a Taylor theorem for multivariate functions $f$ by applying the univariate Taylor
+theorem to the function $t \mapsto f(x + tv)$ and then setting $t=1$. For $k=1$, this gives
+$$
+    f(x + v) = f(x) + \nabla f(x+v)^T v + o(\|v\|).
+$$
+Note this is precisely the definition of the first derivative.
+
+And for $k=2$, we have
+$$
+    f(x + v) = f(x) + \nabla f(x+v)^T v + \frac{1}{2} v^T \nabla^2 f(x+v) v + o(\|v\|^2).
+$$
+
+\section{Lagrange Multipliers}
+
+The method of \textbf{Lagrange multipliers} is used to find stationary points of an objective
+function $f: \mathbb R^n \to \mathbb R$ subject to a constraint of the form $g(x) = 0$,
+by replacing the constrained problem with an unconstrained one.
+The main point is to note the \emph{necessary condition}
+for $x$ to be a stationary point for $f$, that there exists $\lambda \in \mathbb R$ such that
+$\nabla_x f(x) = \lambda \nabla_x g(x)$. Otherwise, there is some non-zero component
+of $\nabla_x f(x)$ along the contour $g(x) = 0$, and thus an increment along $g(x) = 0$
+decreases $f$.
+
+Motivated by this observation, we introduce the \textbf{Lagrange function} $\mathcal L :
+\mathbb R^n \times \mathbb R$ defined by
+$$
+\mathcal L(x,\lambda) = f(x) - \lambda g(x),
+$$
+where $\lambda$ is called the \textbf{Lagrange multiplier} for the problem. Then, we have
+the following equivalence:
+$$
+    \nabla_{x, \lambda} \mathcal L (x,\lambda) = 0 \iff
+    \begin{cases}
+        \nabla_x f(x) &= \lambda \nabla_x g(x) \\
+        g(x)          &= 0.
+    \end{cases}
+$$
+Hence, the condition that there exists $\lambda$ such that $(x,\lambda)$ is a stationary point
+for $\mathcal L$ is a necessary condition for $x$ to be stationary point of $f$ subject to
+$g(x) = 0$. So we can proceed to solve the unconstrained problem, and then check whether each of
+our solutions provides a solution to the original problem.
+
 \section{Linear Least-Squares Methods}
 \subsection{The Linear Problem}
 
 \emph{Generalized linear least-squares} is a technique for solving the problem
-\label{glls}
 \begin{equation}
     x^* = \argmin_{x \in \mathbb R^n} \frac12 \| Ax - y\|_\Sigma^2,
+\label{glls}
 \end{equation}
 where $A \in \mathbb R^{m \times n}$, $y \in \mathbb R^m$, $\Sigma \in \mathbb R^{m \times m}$
 is a symmetric, positive-definite matrix, and $\| z \|_\Sigma = (z^T \Sigma^{-1} z)^{1/2}$ is the
 Mahalanobis norm on $\mathbb R^m$ induced by $\Sigma$. Differentiating (\ref{glls}) with respect
 to $x$ and setting to zero yields the \textbf{normal equations}
-\label{normal}
 \begin{equation}
     A^T \Sigma^{-1} A x = A^T \Sigma^{-1} y.
+\label{normal}
 \end{equation}
 The matrix $A^T \Sigma^{-1} A$ is non-singular if and only if $A$ has full column rank. In this
 case, the problem is said to be \emph{well-posed}, or \emph{observable}.
 Clearly, if the problem is observable, then there is an analytic solution
-$x^* = (A^T \Sigma^{-1} A)^{-1} A^T \Sigma^{-1} y$. We discuss this case first.
+$x^* = (A^T \Sigma^{-1} A)^{-1} A^T \Sigma^{-1} y$. Also note that in this case, the Hessian
+matrix $A^T \Sigma^{-1} A$ is $>0$ and hence the problem is convex; meaning that the stationary
+point $x^*$ is in fact the global minimum. We discuss this case first.
 
 \subsection{Matrix Factorization Solutions}
 Assuming that $A^T \Sigma^{-1} A$ is non-singular, solving (\ref{normal}) amounts to inverting a
 symmetric positive-definite matrix. There are various methods for accomplishing this:
+\subsubsection{Cholesky Decomposition}
+A real matrix $M$ is symmetric and positive-definite if and only if it admits
+a \textbf{Cholesky decomposition}
+$$
+M = LL^T,
+$$
+where $L$ is a non-singular, lower-triangular matrix. Using Cholesky decomposition to solve
+$Mx = b$ goes as follows:
+\begin{enumerate}
+    \item Factor $M = LL^T$.
+    \item Solve $Ly = b$ for $y$ by forward substitution.
+    \item Solve $L^Tx = y$ for $x$ by back substitution.
+\end{enumerate}
+
+Implementation comments:
 \begin{itemize}
-    \item A real matrix $M$ is symmetric and positive-definite if and only if it admits
-    a \textbf{Cholesky decomposition}
-    $$
-    M = LL^T,
-    $$
-    where $L$ is a non-singular, lower-triangular matrix. Using Cholesky decomposition to solve
-    $Mx = b$ goes as follows:
-    \begin{enumerate}
-        \item Factor $M = LL^T$.
-        \item Solve $Ly = b$ for $y$ by forward substitution.
-        \item Solve $L^Tx = y$ for $x$ by back substitution.
-    \end{enumerate}
-    The Cholesky decomposition has a drawback when used for GLLS, namely that
+\item Using the Cholesky decomposition allows the user to only store the $n\times n$ matrix
+    $A^T R^{-1} A$, rather than the full $A$, which can be advantageous for highly overconstrained
+    problems ($m \gg n$).
+\item The Cholesky decomposition has a stability issue, namely that
     $$
     \kappa(A^T \Sigma^{-1} A) \sim \kappa(A)^2,
     $$
     where $\kappa(A)$ is the condition
-    number of the matrix, measuring the maximum possible error in $y$ relative to $x$ given
-    $y = Ax$. Hence
+    number of the matrix, measuring the maximum possible error in $Ax$ relative to $x$. Hence
     a poorly conditioned $A$ can lead easily to a very poorly conditioned $A^T \Sigma^{-1} A$, which
     can be a problem when solving numerical problems.
-
-    \item 
 \end{itemize}
 
-\subsection{Conjugate Gradient Solution}
-\subsection{Regularization of Degenerate Problems}
+In addition, the Cholesky decomposition can be used to simplify (\ref{glls}), without any
+loss of generality: observe that, if we factor $\Sigma^{-1} = L^TL$, and make the
+substitutions
+\begin{align*}
+    A &\leftarrow LA \\
+    y &\leftarrow Ly,
+\end{align*}
+then we have a \emph{normalized} version of the least-squares problem, which is equivlant
+to the original:
+\begin{equation}
+    x^* = \argmin_{x \in \mathbb R^n} \frac12 \| Ax - y\|_2,
+\label{gllsn}
+\end{equation}
+along with normalized normal equations
+\begin{equation}
+    A^TAx = A^Ty.
+\label{normaln}
+\end{equation}
+For simplicity of calculations, we will address the simplified normal equations
+(\ref{normaln}) going forward, keeping in mind that no generality has been lost.
 
-\section{Lagrange Multipliers}
+\subsubsection{QR Decomposition}
+Any real matrix in $\mathbb R^{m \times n}$ for which $m \ge n$ admits
+a \textbf{QR decomposition}
+    $$
+        A\Pi = QR = Q \begin{bmatrix} R_1 \\ 0 \end{bmatrix}
+            = \begin{bmatrix} Q_1 & Q_2 \end{bmatrix}
+                \begin{bmatrix} R_1 \\ 0 \end{bmatrix}
+                    = Q_1 R_1,
+    $$
+where $\Pi \in O(n)$ is a permutation matrix,
+$R_1 \in \mathbb R^{n \times n}$ is upper-triangular, and
+$Q_1 \in \mathbb R^{m \times n}$ and $Q_2 \in \mathbb R^{m \times(m-n)}$
+have orthogonal columns (i.e. $Q$ is orthogonal).
+
+To use QR decomposition to solve (\ref{gllsn}), we compute the QR factorization of $A$,
+and compute
+$$
+    \|Ax - y\|_2^2 = \| R(\Pi^Tx) - Q_1^Ty\|_2^2 + \|Q_2^Ty\|_2^2,
+$$
+which gives the solution
+$$
+    x^* = \Pi R^{-1} Q_1^Ty.
+$$
+
+Implementation comments:
+\begin{itemize}
+    \item The QR approach is less space-efficient than the Cholesky appraoch, as it requires
+        the entire matrix $A$, rathan than just $A^TA$.
+    \item The error in $x^*$ relative to $y$ where is proportional to $\kappa(A)$,
+    rather
+    than $\kappa(A)^2$. Hence this method does not degrade the conditioning of the problem like
+    the pure Cholesky approach.
+\end{itemize}
+
+\subsubsection{Singular Value Decomposition}
+Finally, any matrix $A$ admits a \textbf{singular value decomposition}
+$$
+    A = U \begin{bmatrix} S \\ 0 \end{bmatrix} V^T =
+        \begin{bmatrix} U_1 & U_2 \end{bmatrix} \begin{bmatrix} S \\ 0 \end{bmatrix} V^T
+        = U_1 S V^T,
+$$
+where $U \in \mathbb R^{m \times m}$, $V \in \mathbb R^{n \times n}$ are orthogonal,
+and $S = \operatorname{diag}(\sigma_1, \ldots, \sigma_n)$, with
+$\sigma_1 \ge \ldots \ge \sigma_n$. From the SVD one can compute
+$$
+    \|Ax - y\|_2^2 = \| S(V^Tx) - U_1^Ty\|_2^2 + \|U_2^Ty\|_2^2,
+$$
+giving the solution
+\begin{align*}
+    x^* &= VS^{-1} U_1^Ty \\
+        &= \sum_{i=1}^n \frac{u_i^Ty}{\sigma_i} v_i.
+\end{align*}
+Thus the SVD solution, while expensive to compute, provides very useful information about
+the structure of the solution, particularly its
+sensitivity with respect to perturbations in $y$ along the basis vectors
+$u_i$.
+
+\subsection{Conjugate Gradient Solution}
+\subsection{Tikhonov Regularization of Degenerate Problems}
+In the case where (\ref{gllsn}) is not well-posed ($A$ has column rank $<n$), it is possible
+to find a solution by introducing a \emph{regularization condition} that constrains the
+problem sufficiently. Types of regularization can be quite general; we address only the linear
+type called \textbf{Tikhonov regularization}.
+We introduce a matrix parameter $\Gamma > 0$ and solve the regularized system
+\begin{equation}
+    x_{\Gamma}^* = \argmin_{x \in \mathbb R^n} \|Ax - y\|_2^2 + \|\Gamma x\|_2^2.
+\label{glls-reg}
+\end{equation}
+This system has the normal equations
+\begin{equation}
+    (A^TA + \Gamma^T\Gamma) x = A^Ty.
+\label{normal-reg}
+\end{equation}
+Since $\Gamma > 0$ and $\Gamma^T\Gamma > 0$, the matrix $A^TA + \Gamma^T\Gamma$ is $> 0$ and thus
+is invertible. Hence the analytic solution
+$$
+    x^*_{\Gamma} = (A^TA + \Gamma^T\Gamma)^{-1}A^Ty
+$$
+always exists.
+
+Tikhonov regularization can be seen as imposing a norm constraint, controlled by $\Gamma$, on
+the solution in order to make the problem observable. This can be seen via arguments analogous
+to those in the Lagrange multipliers section: If $x$ is a stationary point of
+(\ref{glls-reg}), then we have
+$$
+    \nabla_x \| Ax - y \|_2^2 = -\nabla_x \| x \|_{\Gamma}^2,
+$$
+that is, the gradients of these two functions are (anti-)parallel. Hence, $x^*_{\Gamma}$ minimizes
+$\|Ax - y\|_{\Gamma}^2$ subject to the constraint that $\| x \|_2 = \|x^*_{\Gamma}\|$, i.e.
+$x^*_{\Gamma}$ is the optimal solution for its Mahalanobis norm under $\Gamma$. Hence, by
+regularizing, we are solving the least-squares problem subject to a norm-constraint determined
+by the matrix $\Gamma$. Note that $\|x^*_{\Gamma}\|$
+and $\|\Gamma\|$ (for some choice of matrix norm) are inversely related; as
+$\|\Gamma\| \to \infty$, $\|x^*_\Gamma\|_2 \to 0$.
 
 \section {$M$-Estimators}
 
-\section{Matrix Calculus}
-
 \section{Differential Geometry}
 \subsection{Differentiable Manifolds}
-\subsection{Riemannian Geometry}
+\subsection{Riemannian Metrics}
 \subsection{The Exponential Map and Normal Coordinates}
+\subsection{Calculus on Manifolds}
 
 \section{Lie Groups}
 
