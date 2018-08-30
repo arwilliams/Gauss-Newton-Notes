@@ -126,15 +126,8 @@ the Hessian is symmetric.
 
 \subsection{Calculus of Real-Valued Functions}
 
-\subsubsection{The Differential and Gradient}
 
-Now we consider the special case where $m=1$, i.e. $f: \mathbb R^n \to \mathbb R$. With an
-eye on generalizing to manifolds, we use the suggestive notation $\frac{\partial}{\partial x_i}$
-for the standard basis for $\mathbb R^n$, and $dx_i$ for its corresponding dual basis. Using
-this notation, we can express the differential $df_x$ as a covector:
-$$
-    df_x = \sum_{i=1}^n \frac{\partial f}{\partial x_i} dx_i.
-$$
+\subsubsection{The Differential and Gradient}
 
 The \textbf{gradient} of $f$ is defined as the dual of the the differential,
 and is denoted $\nabla f(x) \in \mathbb R^n$, so that
@@ -145,19 +138,25 @@ for all $v$. The gradient is given in standard basis coordinates as
 $$
     \nabla f(x) = (df_x)^{\sharp} = \left(\frac{\partial f}{\partial x^T}\right)^T = \sum_{i=1}^n \frac{\partial f}{\partial x_i} \frac{\partial}{\partial x_i},
 $$
+Note that, with an eye towards generalizing to manifolds, we use the notation $\frac{\partial}{\partial x_i}$ to
+denote the $i$-th standard basis vector on $\mathbb R^n$. Similarly, we denote the corresponding dual basis by
+$d x^i$.
+
 The gradient can be interpreted as the vector field pointing in the
 \emph{direction of steepest ascent} of $f$, which can be observed by noting that the directional
 derivative $\nabla f(x)^T v$ is maximized when $v$ is parallel to $\nabla f(x)$.
 
 \subsubsection{The Second Derivative and the Hessian}
 
-Also note that in the $m=1$ case, the second derivative $d^2f_x$ is simply a biliear form
+Also note that in the $m=1$ case, the second derivative $d^2f_x$ is simply a bilinear form
 on $\mathbb R^n$, and is fully described by the Hessian matrix $H(f)_x =
 \frac{\partial^2 f}{\partial x x ^T}$. Using tensor notation, we can write the second derivative
 in terms of the basis covectors:
 $$
-    d^2f_x = H(f)_x = \sum_{i,j} \frac{\partial f}{\partial x_i \partial x_j} dx_i \otimes dx_j.
+    d^2f_x = H(f)_x = \sum_{i,j} \frac{\partial f}{\partial x_i \partial x_j} dx^i \otimes dx^j,
 $$
+where $(\phi \otimes \psi)(v,w) = \phi(v) \psi(w)$ for $\phi, \psi \in (\mathbb R^n)^*$.
+
 In this context, the Hessian is often denoted $\nabla^2f(x)$, and this notation can be made
 rigorous using the machinery of differential geometry.
 
@@ -167,7 +166,7 @@ For one-variable functions $g : \mathbb R \to \mathbb R$, \textbf{Taylor's Theor
 that if $g$ is $k$ times differentable at $a$, then $g$ can be approximated to $k$-th
 order by its Taylor polynomial: There exists a function $h_k : \mathbb R \to \mathbb R$ such
 $$
-    f(a+h) = f(a) + f'(a)h + \frac12 f''(a)h^2 + \cdots + \frac{1}{k!} f^{(k)}(a) h^k +
+    g(a+h) = g(a) + g'(a)h + \frac12 g''(a)h^2 + \cdots + \frac{1}{k!} g^{(k)}(a) h^k +
         o(|h|^k).
 $$
 We can derive a Taylor theorem for multivariate functions $f$ by applying the univariate Taylor
@@ -274,7 +273,7 @@ substitutions
     A &\leftarrow LA \\
     y &\leftarrow Ly,
 \end{align*}
-then we have a \emph{normalized} version of the least-squares problem, which is equivlant
+then we have a \emph{normalized} version of the least-squares problem, which is equivalent
 to the original:
 \begin{equation}
     x^* = \argmin_{x \in \mathbb R^n} \frac12 \| Ax - y\|_2,
@@ -383,13 +382,336 @@ by the matrix $\Gamma$. Note that $\|x^*_{\Gamma}\|$
 and $\|\Gamma\|$ (for some choice of matrix norm) are inversely related; as
 $\|\Gamma\| \to \infty$, $\|x^*_\Gamma\|_2 \to 0$.
 
-\section {$M$-Estimators}
+\section {Robust Estimation of Location}
+\subsection{Location Parameters and $M$-Estimators}
+If a family of probability distributions $\{ f_{x_0} : x_0 \in X\}$ have the form
+$f_{x_0}(x) = f(x - x_0)$, then $x_0$ is called a \textbf{location parameter} of the family. Location parameters
+determine the ``shift'' of a distribution; examples are the mean, median, and mode.
+
+An \textbf{$M$-estimator} is a solution to a minimization problem of the form
+$$
+    T^* = \argmin_{T} \sum_i \rho(x_i - T).
+$$
+Two common examples of $M$-estimators are the sample mean $T = \sum_i x_i /n$ and the sample median, which
+are $M$-estimators for the functions $\rho(t) = t^2$ and $\rho(t) = |t|$, respectively.
+
+\subsection{Asymptotic Normality}
+\subsection{Measuring Robustness}
+\subsection{Huber's Theorem}
+\subsection{The Contaminated Normal Distribution}
 
 \section{Differential Geometry}
 \subsection{Differentiable Manifolds}
-\subsection{Riemannian Metrics}
-\subsection{The Exponential Map and Normal Coordinates}
-\subsection{Calculus on Manifolds}
+\subsubsection{Motivation and Definition}
+A \textbf{differentiable manifold} of dimension $n$ is a space $M$ which is locally approximated by $d$-dimensional
+Euclidean space, in such a way that allows us to do calculus on $M$. In practice, this means that to each point
+$p \in M$ we attach a \textbf{tangent space} $T_pM$, which is isomorphic (as a topological vector space) to
+$\mathbb R^n$, in such a way that calculus done on the tangent spaces can be consistently ``pushed forward'' to
+the manifold. Tangent vectors are viewed as infinitesimal ``directions'' on the manifold at a given point.
+We do calculs on the tangent spaces, and the apply the results back to the manifold, analogous
+to how we do 1-D calculus by applying ``infinitesimal'' perturbations to functions and observing the change in output.
+
+Formally, we define a manifold to be a topological space $M$ satisfying some ``niceness'' conditions
+(e.g. it is Haussdorf) together with a set of \textbf{charts} $(x, U)$, where $x : U \subseteq M \to \mathbb R^n$
+is a homeomorphism, and for any two charts $(x, U)$ and $(y, V)$, the \emph{transition map}
+$y^{-1} \circ x$ is differentiable. This compatibility condition allows us to define, for
+instance, a function $f: M \to \mathbb R$ to be \textbf{differentiable} if $f \circ x^{-1}$ is differentiable for
+any chart $(x, U)$.
+
+\subsubsection{The Tangent and Cotangent Bundles}
+
+Given a point $p \in M$, we can define \textbf{tangent space} $T_pM$
+as the space of equivalence classes of curves $\gamma : B(0, \epsilon) \ni 0 \to M$ with
+$\gamma(0) = p$, with $[\gamma_1] = [\gamma_2]$ if $(x \circ \gamma_1)'(0) = (x \circ \gamma_2)'(0)$
+for any chart $x$. We abuse notation and let $\gamma'(0)$ denote $(x \circ \gamma)'(0)$ for any chart $x$,
+since this quantity is independent of choice of chart.
+
+Note that this definition gives a natural identification with $\mathbb R^n$, via $[\gamma] \mapsto \gamma'(0)$.
+This identification can be used to either define or justify (via isomorphism) addition and scalar multiplication
+on $T_pM$ in the obvious way.
+
+Observe that tangent vectors are naturally viewed as directional differentiation operators on $C^{\infty}(M)$: for
+$v = \gamma'(0) \in T_pM$,
+$$
+    v(f) = (f \circ \gamma)'(0).
+$$
+The map $v \mapsto v(f)$ from $T_pM \to \mathbb R$ is linear, and is called the \textbf{differential} or
+\textbf{pushforward} of $f$, denoted $df_p$. So we have
+$$
+    df_p(v) = v(f) = (f \circ \gamma)'(0).
+$$
+The differential can be viewed as the linearization of $f$ at $p$, using $f$ to ``push foward'' the tangent space.
+
+The \textbf{tangent bundle} $TM$ of $M$ is the set $\{ (p, v) : v \in T_pM \}$, endowed with a canonical manifold
+structure that is ``locally trivial'': around each point $p \in M$ there is a local neighborhood $U$
+and a diffeomorphism $\phi : TU \to U \times \mathbb R^n$ that \emph{also} restricts to vector space isomorphism
+between $T_p M \cong \mathbb R^n$ for each $p \in U$. In general it is not the case that $TM \cong M \times \mathbb R^n$
+globally; the \textbf{hairy ball theorem} gives $TS^2 \not \cong S^2 \times \mathbb R^2$ as simple example of a
+nontrivial tangent bundle.
+
+The tangent bundle $T\mathbb R^n$, however, \emph{is} trivial, and this is why we can identify
+$T_p\mathbb R^n \cong \mathbb R^n$ and thus greatly simplify calculus on Euclidean space.
+
+The \textbf{cotangent bundle} $T^*M$ is the dual to the tangent bundle: we attach a copy of the
+\textbf{cotangent space} $T^*_pM$ to each point of $M$ in the analogous fashion. In general, such a construct is
+called a \textbf{vector bundle} on $M$. If the vector spaces attached to each point have additional structure,
+we can require that that structure is preserved in the local trivializations.
+
+\subsubsection{Sections, Tensor Bundles, and Exterior Bundles}
+
+A \textbf{(differentiable) section} of a vector bundle $B$ over $M$ is a differentable mapping
+$\sigma : M \to B$ such that $B(p)$ belongs the to vector space attached at $p$. A section of the tangent bundle
+is a \textbf{vector field}. The $C^{\infty}(M)$-algebra of vector fields on $M$ is denoted $\Gamma(TM)$.
+\textbf{covector fields} (also called \textbf{one-forms}) are defined similarly.
+
+We may view a vector field $V$ as a differentiation operator on smooth functions: $V : C^{\infty}(M) \to C^{\infty}(M)$
+via
+$$
+    (Vf)(p) = V(p)(f) = df_p(V(p)).
+$$
+Dually, we may view the differential as a one-form, acting on vector fields: $df : \Gamma(TM) \to C^{\infty}(M)$ via
+$$
+    df(V) = Vf.
+$$
+
+We may apply an operation that we apply to a vector space to a vector bundle $B$ on $M$ by
+applying the operation ``fiber-wise``. In particular, we can define the \textbf{type-(r,s) tensor bundle} on $M$ by
+$$
+    \mathcal T^r_s(M) = TM^{\otimes r} \otimes T^*M^{\otimes s}.
+$$
+A \textbf{tensor field} is then a section of a tensor bundle on $M$. Tensor fields are ubiquitous construction on
+manifolds; they subsume both vector fields and covector fields. See the sections on Riemannian metrics and
+the Riemann curvature tensor below.
+
+Another canonical example of a vector bundle on $M$ is the \textbf{$k$-th order exterior bundle}
+$\bigwedge^k(T^*M)$. A section of this bundle is a \textbf{differential $k$-form} on $M$. Integration of forms on
+manifolds is currently beyond the scope of these notes, but they allow for the statement of the famous
+Stokes' Theorem, $\int_{\partial M} \omega = \int_M d\omega$.
+
+\subsubsection{Pushforwards}
+
+More generally, we can define the differential (also known as the \textbf{pushforward}) of a mapping
+$\varphi : M \to N$ between manfolds. The pushforward generalizes the full derivative in Euclidean space.
+The pushforward, denoted, $d\varphi$ or $\varphi_*$, is a mapping between
+tangent bundles:
+\begin{align*}
+    \varphi_* &: TM \to TN \\
+    \varphi_* &: V \mapsto (g \mapsto V(g \circ \varphi))
+\end{align*}
+for $g \in C^{\infty}(N)$. The restriction of $\varphi_*$ to a tangent space is a linear map:
+\begin{align*}
+    (\varphi_*)_p &: T_pM \to T_{\varphi(p)}N \\
+    (\varphi_*)_p &: V_p \mapsto (g \mapsto V_p (g \circ \varphi)).
+\end{align*}
+
+The pushforward allows us to define various ``morphisms'' between manifolds: we say that $\varphi: M \to N$ is a
+\begin{itemize}
+    \item \textbf{submersion} if $\operatorname{rank}(\varphi_*)_p = \dim N$ for every $p \in M$
+    (i.e. the pushforward is surjective on each tangent space),
+    \item \textbf{immersion} if $\operatorname{rank}(\varphi_*)_p = \dim M$ for every $p \in M$
+    (i.e. the pushforward is injective on each tangent space),
+    \item \textbf{embedding} if $\varphi$ is an injective immersion.
+\end{itemize}
+The \textbf{Whitney embedding theorem} is a deep theorem in differential geometry, which
+states that every manifold $M$ can be embedded in $\mathbb R^{2 \dim M}$. Note that this is not obvious;
+we can for instance easily see that $S^2$ can be embedded in $\mathbb R^3$, but it is not obvious that its
+tangent bundle $TS^2$ can be embedded into any Euclidean space.
+
+\subsubsection{Local Coordinates}
+
+Let $(x, U)$ be a chart on $M$. We can view $x$ as giving a system of local coordinates on the manifold, via
+$x(p) = (x_1(p), \ldots, x_n(p))^T \in \mathbb R^n$.
+These coordinates induce
+coordinates on the (local) tangent and cotangent bundles, $TU$ and $T^*U$. Particularly, if we let
+$x^i \in C^{\infty}(M)$ be the $i$-th coordinate of $x$, then the one-forms $dx^i \in \Gamma(T^*U)$ form a basis for
+$\Gamma(T^*U)$. We let the dual basis be called $\frac{\partial}{\partial x_i} \in \Gamma(TU)$. Then the vector
+field $\frac{\partial}{\partial x_i}$ acts on $f \in C^{\infty}(U)$ by
+$$
+    \frac{\partial}{\partial x_i} f = (f \circ (t \mapsto x  + t e_i))'(0),
+$$
+which, for a given point $p \in U$, is the usual partial derivative of $f \circ x$. We denote this quantity by
+$\frac{\partial f}{\partial x_i}$, in an abuse of notation. Hence any vector field $V \in \Gamma(TU)$ can be written
+as
+$$
+    V = \sum_i V^i \frac{\partial}{\partial x_i},
+$$
+acting on functions by
+$$
+    Vf = \sum_i V^i \frac{\partial f}{\partial x_i}.
+$$
+Similarly, any one-form $df$ can be written as
+$$
+    df = \sum_i \frac{\partial f}{\partial x_i} dx^i.
+$$
+
+The pushforward of a map $\varphi : M \to N$ is given in local coordinates by the Jacobian matrix:
+$$
+    (\varphi_*)_i^j = \frac{\partial \varphi_j}{\partial x_i}.
+$$
+where $x$ and $y$ are coordinates on $M$ and $N$, respectively.
+Note that, here, $\varphi_j$ is shorthand for $(y \circ \varphi)_j : V \subseteq N \to \mathbb R^m$.
+
+\subsubsection{Integral Curves and Flow}
+
+Given a vector field $V \in \Gamma(TM)$ and a point $p \in M$, an \textbf{integral curve} for $V$ passing through $p$
+is a curve $\gamma : J \subseteq I \to M$ such that
+\begin{align*}
+    \gamma(t_0) &= p \\
+    \gamma'(t) &= V_{\gamma(t)}
+\end{align*}
+for all $t \in J$. Under a choice of local coordinates $x$, this condition becomes the IVP
+\begin{align*}
+    \gamma(t_0) &= p \\
+    \frac{d \gamma_i}{dt} &= V^i,
+\end{align*}
+so a (local) solution always exists and is unique,
+using the Picard-Lindelof theorem.
+
+More generally, we can consider the \textbf{flow} of the vector field $V$, i.e. the mapping
+$\Phi : D \subseteq \mathbb R \times M \to M$ satisfying
+\begin{align*}
+    \Phi^0(p) &= p \\
+    \frac{d}{dt} \Phi^t(p) &= V_{\Phi^t(p)},
+\end{align*}
+defined (uniquely) on some maximal domain $D$. The map $t \mapsto \Phi^t$ is a
+\textbf{one-parameter subgroup} of local diffeomorphisms on $M$---for each $t$, $p \mapsto \Phi^t(p)$
+is a local diffeomorphism from $U \to \Phi^t(U)$, and the map obeys the group law:
+$$
+    \Phi^s \circ \Phi^t = \Phi^{s+t}.
+$$
+
+\subsubsection{The Lie Derivative}
+
+The \textbf{Lie derivative} evaulates the change in a vector (scalar, tensor) field along the flow defined
+by a vector field. For scalar fields $f \in C^{\infty}(M)$, the definition of the Lie derivative $\mathcal L_Vf \in
+C^{\infty}(M)$ is
+$$
+\mathcal L_X f(p) = \lim_{t \to 0} \frac{f(\Phi^t(p)) - f(p)}{t}.
+$$
+
+For vector fields, we would like to define the analogous
+$\mathcal (L_X W)_p = \lim_{t \to 0} \frac{1}{t}(d\Phi^t_p W_p - W_p)$. But as we have no way of comparing vectors
+in different tangent spaces in a coordinate-independent manner, this notion isn't well-defined. Instead, we must
+map all values of $Y$ ``back'' into $T_pM$ via $\Phi^t$. Hence we define
+$$
+    \mathcal (L_V W)_p = \lim_{t \to 0} \frac{d\Phi^{-t}_{\Phi^t(p)}W_{\Phi^t(p)} - W_p}{t}.
+$$
+
+In coordinates, this yields
+$$
+    (\mathcal L_V W)^i = \sum_j V^j \frac{\partial W_i}{\partial x_j} - W^j \frac{\partial V_i}{\partial x_j}.
+$$
+
+Defining the \textbf{Lie bracket} of two vector fields via
+$$
+    [V,W]f = VWf - WVf,
+$$
+we have
+$$
+    \mathcal L_V W = [V, W].
+$$
+
+It is important to note that the Lie derivative depends (anti)-symmetrically on local values of both $V$ and $W$;
+so we cannot e.g. take the Lie derivative of a single vector, or take the Lie derivative along a curve.
+
+\subsection{Riemannian Geometry}
+\subsubsection{Riemannian Metrics}
+
+A \textbf{Riemannian metric} on a manifold $M$ is a smooth section of the bundle of
+symmetric positive-definite bilinear forms on $TM$. That is, $g \in \Gamma(T^*M \otimes T^*M$) is symmetric and 
+positive-definite. A Riemannian metric induces an inner product $g_p$ on each tangent space $T_pM$, thus endowing
+each tangent space with a notion of length and angle. In local coordinates, we can write
+$$
+    g = \sum_{ij} g_{ij} dx^i \otimes dx^j.
+$$
+
+Furthermore, a Riemannian manifold $(M, g)$ is also a \emph{length metric space}: If $\gamma : [a,b] \to M$ is
+a curve, then we can define its \emph{arc length}:
+$$
+    L(\gamma) = \int_a^b \sqrt{g(\gamma'(t), \gamma'(t))} dt.
+$$
+The distance between two points is then
+$$
+    d(p,q) = \inf\{L(\gamma) \mid \gamma(a) = p, \; \; \gamma(b) = q\}.
+$$
+
+\subsubsection{Covariant Derivatives}
+
+The existence of a Riemannian metric also allows us to canonically identify different tangent spaces, through
+the machinery of a \textbf{covariant derivative}, also called an
+\textbf{affine connection}. Intuitively, the structure of an affine connection means that
+$M$ looks locally like $\mathbb R^n$ not only as a vector space, but as an \emph{affine space}. This allows
+us to develop notions of parallel transport of vectors, and to differentiate vector fields as if they were functions
+on the manifold, taking values in the same vector space.
+
+Formally, a covariant derivative is an differentiation operator on vector fields that differentiate one
+vector field along another. 
+As motivation, we consider a manifold $M$
+isometrically embedded in $\mathbb R^m$ via a smooth mapping $\Phi : M \to \mathbb R^m$.
+In this case, the vectors $\frac{\partial \Phi}{\partial x_i}$ form a basis for $T_pM$ at each $p$, and
+the metric agrees with the ambient metric in $\mathbb R^m$ :
+$g_{ij} = \left\langle \frac{\partial \Phi}{\partial x_i}, \frac{\partial \Phi}{\partial x_j} \right\rangle$.
+
+In this situation, we may differentiate a vector field $V = V^i \frac{\partial \Phi}{\partial x_i}$ along
+(for simplicity) a unit vector (field) $\frac{\partial}{\partial x_i} \in \Gamma(TM)$ as follows: First, take
+the derivative in the ambient Euclidean space:
+$$
+    \frac{\partial V}{\partial x_i}
+        = \frac{\partial V_j}{\partial x_i}\frac{\partial \Phi}{\partial x_j} +
+            V^j \frac{\partial^2 \Phi}{\partial x_i \partial x_j},
+$$
+and then we project the second component of this vector back into the tangent space; for some section $n$
+of the ``normal bundle'' $NM$, we can decompose the second derivate along the direct sum
+$T\mathbb R^m = TM \oplus NM$:
+$$
+    \frac{\partial^2 \Phi}{\partial x_i \partial x_j}
+        = \Gamma^k_{ij} \frac{\partial \Phi}{\partial x_k} + n.
+$$
+We then project by simply dropping $n$, and define the \textbf{covariant derivative} along a coordinate tangent
+vector by
+$$
+    \nabla_{\frac{\partial}{\partial x_i}} V = \left( \frac{\partial V^k}{\partial x_i} + V^j \Gamma^k_{ij}
+        \right) \frac{\partial \Phi}{\partial x_k}.
+$$
+This (canonical) choice of connection (extended linearly to all of $\Gamma(TM)$)
+is called the \textbf{Levi-Civita connection}.
+The coefficients $\Gamma^k_{ij}$ are called the \textbf{Christoffel symbols} of the connection, and they satisfy
+the following relation with the metric:
+\begin{equation}
+    g_{kl}  = \Gamma^k_{ij} \frac 12 \left(\frac{\partial g_{jl}}{\partial x_i}
+        + \frac{\partial g_{li}}{\partial x_j} + \frac{\partial g_{ij}}{\partial x_l} \right).
+\label{christoffel}
+\end{equation}
+
+It turns out that the Levi-Civita connection on $M$ in this embedded setting
+is uniquely specified by the following set of properties: it is the unique bilinear map
+$\nabla : \Gamma(TM) \times \Gamma(TM) \to \Gamma(TM)$ satisfying
+\begin{enumerate}
+    \item $\nabla_{f W} V = f \nabla_W V$ (i.e. linearity in the vector field that we are differentiating along).
+    \item $\nabla_W (fV) = df(V)W + f \nabla_W V$ (i.e. satifies a product rule in the vector field being differentiated).
+    \item $\nabla$ preserves the metric: $\nabla g = 0$.
+    \item $\nabla$ is \emph{torsion-free}, i.e. $\nabla_W V - \nabla_V W = [V, W]$.
+\end{enumerate}
+Note that (1) and (2) are metric-independent; any bilinear map satisfying these is a general affine connection;
+imposing (3) and (4) gives the unique Levi-Civita connection. We generalize to non-embedded manifolds by simply
+taking these as the definition of the connection.
+
+\subsubsection{Differentiating along Curves, Parallel Transport, and Geodesics}
+
+It is crucial to notice that an affine connection gives us a definition of $\nabla_v V$ for $v \in T_pM$; that is,
+$(\nabla_V W)_p$ depends on local values of $V$, but only on the value of $W$ at $p$. Hence the connection gives
+us the ability to differentiate along curves: given a curve $\gamma : I \to M$, we define
+$$
+    \frac{DV}{dt} = \nabla_{\gamma'(t)} V.
+$$
+
+A vector field $V$ along a curve $\gamma$ is called \textbf{parallel} if $\nabla_{\gamma'} V = 0$.
+The \textbf{parallel transport} of a vector $v \in T_pM$ along $\gamma$ is the unique extension of $v$
+to a parallel vector field along $\gamma$.
+
+A \textbf{geodesics} is a curve $\gamma$ for which $\nabla_{\gamma'} \gamma' = 0$.
+
+\subsubsection{The Exponential Map and Normal Coordinates}
 
 \section{Lie Groups}
 
@@ -401,6 +723,12 @@ Nocedal \& Wright,
 Springer Series In Optimization Research,
 Second Edition,
 2006.
+
+\bibitem{huber}
+Huber, Peter J.,
+\emph{Robust Estimation of a Location Parameter}.
+University of California, Berkeley,
+1963.
 
 \end{thebibliography}
 
