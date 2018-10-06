@@ -21,9 +21,149 @@
 \section{Introduction}
 
 \section{General Unconstrained Optimization in Euclidean Spaces}
+
 \subsection{The General Unconstrained Problem}
-\subsection{The Newton Direction}
+
+The \textbf{general unconstrained optimization problem} for $\mathbb R^n$ consists of
+an \textbf{objective function} $f : \mathbb R^n \to \mathbb R$, where we wish to find
+$$
+    x^* = \argmin_{x \in \mathbb R^n} f(x).
+$$
+If $f$ is affine ($f = Ax + b$), then there is a closed form solution (see the appendix
+section on linear least-squares methods). Otherwise, we solve the problem numerically
+by attempting to approximate a \textbf{stationary point} of $f$, that is, a point
+$x \in \mathbb R^n$ for which $df_x = 0$. Via Taylor's theorem, any
+\textbf{local minimizer} of $f$ is necessarily a stationary point.
+
+The converse, however --- that a stationary point is a local minimizer of $f$ ---
+is not in generally true. It is, however, true in the case where the second
+derivative (Hessian matrix) of $f$ at $x$ is positive-definite, i.e. $H(f)_x > 0$. If
+$H(f) > 0$ globally, then $f$ is called \textbf{convex}, and all stationary
+points are local minimizers. Hence convex functions are of particular interest
+in numerical optimization.
+
+The goal of unconstrained numerical optimization is generally to, given an initial
+point $x_0 \in \mathbb R^n$, construction a sequence $(x_k)_{k \in \mathbb N}$
+that converges to a stationary point $x^*$ of $f$, with some satisfactory rate of
+convergence:
+\begin{align*}
+    x_k &\to x^*, \\
+    df_{x^*} &= 0.
+\end{align*}
+In general, it is difficult to distinguish between local minimizers and global minimizers,
+and so a crucial task in implementing optimizations to make sure one starts in the
+``correct basin.'' How to solve this initialization problem is a domain-specific
+engineering problem, and so no such topic will be covered by these notes. These notes
+cover the problem of reaching a local minimizer given an initial guess.
+
+The problem of constructing the next point $x_{k+1}$ given $x_k$ is usually formulated
+as the problem of finding the optimal ``step'' $v_k$, and setting
+$$
+    x_{k+1} = x_k + v_k.
+$$
+
+\subsection{Gradient Descent}
+
+Given a point $x \in \mathbb R^n$, the gradient $\nabla f(x)$ is the ``steepest
+ascent'' direction for $f$ at $x$,
+in the sense that $u = \nabla f(x) / \| \nabla f(x) \|$ maximizes
+the directional derivative $df_x u = \nabla f(x)^T u$ over all unit vectors $u$.
+\textbf{Gradient descent} is the optimization method of choosing each step $v_k$ to
+be in the direction of the (negative) gradient.
+
+Gradient descent can be thought of as using a first-order approximation to $f$:
+\begin{align*}
+    f(x_k + v) &= m^1_k(v) + o(\|v\|^2),
+\end{align*}
+where
+\begin{align*}
+    m^1_k(v) &= f(x_k) + \nabla f(x_k)^T v \\
+        &= f(x_k) + df_{x_k} v. \\
+\end{align*}
+When $\nabla f_k \ne 0$, $m^1_k$ of course has no local extrema, and thus we cannot minimize
+it globally. The best we can do is minimize it subject to the constraint $\|v\| = \alpha$,
+which gives the gradient descent direction
+$$
+    v^{GD}_k = - \alpha \nabla f_k / \| \nabla f_k \|.
+$$
+
+While gradient descent has the advantage that it only requires the computation of
+first derivatives, its
+convergence can be quite slow, since its steps do not take curvature
+into account and thus can ``bounce'' back and forth a lot around basins with non-constant
+curvature.
+
+There is of course also the problem of choosing the step size $\alpha$, since
+gradient descent gives only directional information. Methods like this
+which involve choosing
+an optimal step direction, following by a magnitude, are called \textbf{line search}
+methods, and a thorough discussion of these methods is beyond the scope of these notes.
+
+\subsection{Newton's Method}
+
+\textbf{Newton's method} improves upon gradient descent by taking curvature
+information into account; we approximate $f$ to second order via
+$$
+    f(x_k + v) = m^2_k(v) + o(\|v\|^3),
+$$
+where
+\begin{align*}
+    m^{N}_k(v) &= f_k + \nabla f_k^T v + \frac{1}{2} v^T \nabla^2 f_k v, \\
+\end{align*}
+where $\nabla^2 f_k$ denotes the Hessian matrix (i.e. the matrix of the second
+derivative of $f$).
+
+Crucially, if $\nabla^2 f > 0$, i.e. if the Hessian is positive-definite, then
+the model function $m^2_k$ is convex, and has a unique local minimum, which is
+the \textbf{Newton step} for the optimization state, and can be solved for by
+setting $d m^2_k(v) = 0$, yielding
+$$
+    v^N_k = - [\nabla^2 f_k]^{-1} \nabla f_k.
+$$
+It is worth noting that this is the solution to the linear equation
+$$
+    \nabla^2 f_k v + \nabla f_k = 0,
+$$
+and so we are actually solving a linear least-squares problem
+$$
+    v^N_k = \argmin_{v \in \mathbb R^n} \left\| \nabla^2 f_k v + \nabla f_k \right\|_2^2.
+$$
+
+In practice, computing the full Hessian at each step can be prohibitively expensive,
+and one uses an approximation of the Hessian satisfying some desirable conditions.
+Such methods are known as \textbf{quasi-Newton methods}.
+
 \subsection{Trust Region Methods}
+
+Taylor's theorem only guarantees that the quadratic approximation $m^2_k$ of $f$
+is close to $f$ when its argument $v$ is sufficiently small. Hence it may be
+ill-advised to take the ``global'' Newton step if said step is too large. Hence
+we may want to decide that there is some neighborhood
+of $x_k$ within which we ``trust'' that the
+quadratic approximation is ``good enough''.
+
+A \textbf{trust region method} applies Tikhonov regularization to the step-level
+least-squares minimization problem: Instead of minimizing globally, we solve
+the norm-constrained problem:
+$$
+    v^{N,\Gamma}_k = \argmin_{v \in \mathbb R^b} \left\| \nabla^2 f_k v + \nabla f_k \right\|_2^2
+        + \left\| \Gamma v \right\|_2^2,
+$$
+for some \textbf{damping} matrix $\Gamma$. Note that, if $\Gamma = 0$ and 
+$\nabla^2 f_k$ is positive-definite, then this reduces to the usual Newton step.
+
+If $\Gamma > 0$, then the trust region constrained step has an exact solution, obtained
+by solving the regularized least-squares problem:
+$$
+    v^{N,\Gamma}_k = \left([\nabla^2 f_k]^T [\nabla^2 f_k] + \Gamma^T \Gamma\right)^{-1}
+        [\nabla^2 f_k]^T \nabla f_k.
+$$
+
+A common approach is to take $\Gamma = \lambda I$, so that $\Gamma v = \lambda v$,
+and increase/decrease the size of the trust region (determined by the magnitude
+of $\Gamma^{-1}$) depending on how well the model function predicts the change in
+$f$ with each step.
+
 \subsection{Convergence Theory}
 
 \section{Gauss-Newton in Euclidean Spaces}
@@ -68,7 +208,7 @@ $$
 With respect to the standard bases, the matrix differential is given
 by the matrix of partial derivatives, which is called the \textbf{Jacobian matrix}:
 $$
-    [df_x] = J(f)x =
+    [df_x] = J(f)_x =
         \frac{\partial f }{\partial x^T} =
         \begin{bmatrix} \frac{\partial f_1}{\partial x_1} & \cdots & \frac{\partial f_1}{\partial x_n} \\
         \vdots & \ddots & \vdots \\ 
@@ -87,7 +227,7 @@ If $f$ is differentable on all of its domain $U$, then we can consider the map
 $df : U \to L(\mathbb R^n, \mathbb R^m)$ given by $x \mapsto df_x$. We can also consider the
 differentiability of this map: naturally, $d^2f_x$ should be a linear transformation from
 $\mathbb R^n$ to $L(\mathbb R^n, \mathbb R^m)$. Making the natural association between
-$L(\mathbb R^n, L(\mathbb R^n, \mathbb R^m)$ and the space of bilinear maps
+$L(\mathbb R^n, L(\mathbb R^n, \mathbb R^m))$ and the space of bilinear maps
 $L^2(\mathbb R^n \times \mathbb R^n, \mathbb R^m)$, we say that $f$ is twice-differentiable
 at $x$ if there exists a bilinear map $B: \mathbb R^n \times \mathbb R^n \to \mathbb R^m$ such that
 $$
@@ -172,13 +312,13 @@ $$
 We can derive a Taylor theorem for multivariate functions $f$ by applying the univariate Taylor
 theorem to the function $t \mapsto f(x + tv)$ and then setting $t=1$. For $k=1$, this gives
 $$
-    f(x + v) = f(x) + \nabla f(x+v)^T v + o(\|v\|).
+    f(x + v) = f(x) + \nabla f(x)^T v + o(\|v\|).
 $$
 Note this is precisely the definition of the first derivative.
 
 And for $k=2$, we have
 $$
-    f(x + v) = f(x) + \nabla f(x+v)^T v + \frac{1}{2} v^T \nabla^2 f(x+v) v + o(\|v\|^2).
+    f(x + v) = f(x) + \nabla f(x)^T v + \frac{1}{2} v^T \nabla^2 f(x) v + o(\|v\|^2).
 $$
 
 \section{Lagrange Multipliers}
@@ -193,7 +333,7 @@ of $\nabla_x f(x)$ along the contour $g(x) = 0$, and thus an increment along $g(
 decreases $f$.
 
 Motivated by this observation, we introduce the \textbf{Lagrange function} $\mathcal L :
-\mathbb R^n \times \mathbb R$ defined by
+\mathbb R^n \times \mathbb R \to \mathbb R$ defined by
 $$
 \mathcal L(x,\lambda) = f(x) - \lambda g(x),
 $$
@@ -314,7 +454,7 @@ $$
 Implementation comments:
 \begin{itemize}
     \item The QR approach is less space-efficient than the Cholesky appraoch, as it requires
-        the entire matrix $A$, rathan than just $A^TA$.
+        the entire matrix $A$, rather than just $A^TA$.
     \item The error in $x^*$ relative to $y$ where is proportional to $\kappa(A)$,
     rather
     than $\kappa(A)^2$. Hence this method does not degrade the conditioning of the problem like
@@ -367,7 +507,7 @@ $$
 $$
 always exists.
 
-Tikhonov regularization can be seen as imposing a norm constraint, controlled by $\Gamma$, on
+Tikhonov regularization can also be seen as imposing a norm constraint, controlled by $\Gamma$, on
 the solution in order to make the problem observable. This can be seen via arguments analogous
 to those in the Lagrange multipliers section: If $x$ is a stationary point of
 (\ref{glls-reg}), then we have
@@ -382,23 +522,152 @@ by the matrix $\Gamma$. Note that $\|x^*_{\Gamma}\|$
 and $\|\Gamma\|$ (for some choice of matrix norm) are inversely related; as
 $\|\Gamma\| \to \infty$, $\|x^*_\Gamma\|_2 \to 0$.
 
+\section{Fisher Information}
+
 \section {Robust Estimation of Location}
 \subsection{Location Parameters and $M$-Estimators}
-If a family of probability distributions $\{ f_{x_0} : x_0 \in X\}$ have the form
-$f_{x_0}(x) = f(x - x_0)$, then $x_0$ is called a \textbf{location parameter} of the family. Location parameters
+If a family of probability distributions $\{ f_{\theta} : \theta \in \Theta\}$
+has the form
+$f_{\theta}(x) = f(x - \theta)$, then $\theta$ is called a \textbf{location parameter} of the family. Location parameters
 determine the ``shift'' of a distribution; examples are the mean, median, and mode.
 
-An \textbf{$M$-estimator} is a solution to a minimization problem of the form
+Formally, given a location family $\mathcal F = \{ f_{\theta} : \theta \in \Theta\}$, and a random variable
+$X : \Omega \to \mathbb R$ whose distribution belongs to $\mathcal F$,
+an \textbf{$M$-estimator} for the location parameter of $\mathcal X$ is (for each $n$) a function
 $$
-    T^* = \argmin_{T} \sum_i \rho(x_i - T).
+    t_n : \mathbb R^n \to \Theta
 $$
-Two common examples of $M$-estimators are the sample mean $T = \sum_i x_i /n$ and the sample median, which
-are $M$-estimators for the functions $\rho(t) = t^2$ and $\rho(t) = |t|$, respectively.
+taking the form
+$$
+    t_n(x_1, \ldots, x_n) = \argmin_{\theta \in \Theta} \sum_{i=1}^n \rho(x_i - \theta),
+$$
+where $\rho : \mathbb R \to \mathbb R$
+is a convex function that tends to infinity as its argument approaches $\pm \infty$.
+Two common examples of $M$-estimators are the sample mean
+$t_n(x_1, \ldots, x_n) = \sum_i x_i /n$ and the sample median, which
+are $M$-estimators for the functions $\rho(x) = x^2$ and $\rho(x) = |x|$, respectively.
+
+Define $\psi = \rho'$, and assume that $\psi$ is continuous. Then $t_n$ is equivalently defined by
+$$
+    \sum_{i=1}^n \psi(x_i - t_n(x_1, \ldots, x_n)) = 0.
+$$
 
 \subsection{Asymptotic Normality}
-\subsection{Measuring Robustness}
-\subsection{Huber's Theorem}
-\subsection{The Contaminated Normal Distribution}
+
+Fix and underlying distribution $F$.
+By viewing the arguments to $t_n$ as random variables with distribution $F$,
+we can view $t_n$ as a $\Theta$-valued random variable.
+We can thus consider its \textbf{asymptotic distribution}, i.e. the distribution of $t_n$ as $n \to \infty$.
+Define $\lambda(\xi) = \mathbb E_x \psi(x - \xi)$. Assume that
+\begin{enumerate}
+    \item $\lambda(\theta^*) = 0$,
+    \item $\lambda'(\theta^*) < 0$,
+    \item $\int \psi^2(x - \theta^*) F(dx)$ is finite and continuous at $x = \theta^*$.
+\end{enumerate}
+Then $t_n$ is \textbf{asymptotically normal} with mean $\theta^*$ and \textbf{asymptotic variance}
+$$
+    V(\psi, F) = \frac{1}{\lambda'(\theta^*)^2} \int \psi^2(x - \theta^*) F(dx).
+$$
+That is, we have convergence in distribution:
+$$
+    t_n \xrightarrow{D} N(\theta^*, V(\psi, F)).
+$$
+
+Following are examples; we assume that all distributions are centered, i.e. $t_n \to 0$.
+
+\subsubsection{Example: The Sample Mean}
+
+Taking $\rho(x) = x^2$ gives $t_n = \sum_i x_i /n$, which is asymptotically normal with variance
+\begin{align*}
+    V & = \int x^2 F(dx).
+\end{align*}
+Observe that the sample mean is especially sensitive to the tails of $F$.
+
+\subsubsection{Example: The Sample Median}
+
+Taking $\rho(x) = |x|$ gives $t_n$ as the sample median of $\{x_i\}$, which is asymptotically normal with variance
+\begin{align*}
+    V & = \frac{1}{2F'(0)^2}.
+\end{align*}
+Note that the sample median is sensitive only to values near the distribution's median.
+
+\subsubsection{Example: The Huber Loss Function}
+
+Let
+$$
+\rho(x) =
+\begin{cases}
+    \frac{1}{2} x^2 & |x| \le k \\
+    k|x| - \frac{1}{2} k^2 & |x| > k
+\end{cases}
+$$
+be the \textbf{Huber loss function}, with \textbf{characteristic scale} $k$. Then $\rho(x)$ has the following properties:
+\begin{enumerate}
+    \item Any samples $x_i$ for which $|x_i - t_n| > k$ may be replaced by the closer of
+    $t_n \pm k$ without changing the value
+        of $t_n$.
+    \item $t_n$ is the sample mean of the modified set of observations.
+\end{enumerate}
+Then $t_n$ is asymptotically normal with variance
+\begin{align*}
+    V & = \left(\int_{-k}^{+k} F(dx) - kF'(k) - kF'(-k)\right)^{-2} \int_{-k}^{+k} x^2F(dx).
+\end{align*}
+
+\subsection{Robust Estimation and Huber's Theorem}
+
+We formalize the notion of ``robust'' estimation by considering a fixed distribution $G$, and a space
+of ``contaminated'' distributions
+$$
+    \mathcal F = \{F = (1 - \epsilon) G + \epsilon H : H \in \mathcal D\},
+$$
+where $\epsilon \in [0, 1)$ is fixed, and
+and $H$ is a varying distribution function. We then attempt to measure how the asymptotic
+variance of $M$-estimators on $F \in \mathcal{F}$ are affected by $\epsilon$ and $H$. This setup models a
+``true'' distribution $G$ contaminated such that a sample of size $n$ contains
+some expected number $\epsilon n$ of outliers coming following
+another distribution $H$. \textbf{Huber's theorem} addresses this by showing that $V(\psi, F)$ has a
+\emph{saddle point}: we can find $F_0 = (1 - \epsilon) G + \epsilon H_0$ and $\psi_0$ such that
+$$
+    \sup_F V(\psi_0, F) = V(\psi_0, F_0) = \inf_{\psi} V(\psi, F_0),
+$$
+where we restrict to $\mathbb E_F \psi_0 = 0$. In other words, we can (under some technical conditions --- see
+[Huber]XXX) minimize the supremum of the asymptotic variance of $t_n$ over all unbiased choices of $\psi$.
+
+In fact, we have a formula for the minimizing $M$-estimator:
+$$
+    \psi_0 = -f'_0 / f_0,
+$$
+where $f_0$ is the density of $F_0$, and is given by
+\begin{align*}
+    f_0(x) &= (1 - \epsilon) g(x_0) e^{k(x - x_0)} & t \le x_0, \\
+           &= (1 - \epsilon) g(x) & x_0 < x < x_1, \\
+           &= (1 - \epsilon) g(x_1) e^{-k(x - x_0)} & x \ge x_1,
+\end{align*}
+where $[x_0, x_1]$ is the interval on which $|g'/g| \le k$, and $k \in \mathbb R$ is defined by
+$$
+    (1 - \epsilon)^{-1} = \frac{g(x_0) + g(x_1)}{k} + \int_{x_0}^{x_1} g(x) dx.
+$$
+
+\subsubsection{Special Case: The Contaminated Normal Distribution}
+
+The special case of Huber's theorem where $G = \Phi$ is the standard normal distribution is of
+particular significance. In this case, letting $k$ be defined by
+$$
+    (1 - \epsilon)^{-1} = \frac{2 \phi(k)}{k} + \int_{-k}^{+k} \phi(x) dx,
+$$
+the Huber loss function $\rho$ with characteristic scale $k$ minimizes
+$\sup_F V(\psi, F)$ over all translation invariant estimators, where the $\sup$ is taken over all
+symmetric $F = (1 - \epsilon) \Phi + \epsilon H$. In this case, the (least-favorable) $F_0$ has density
+$$
+    f_0(x) = (1 - \epsilon) \frac{1}{\sqrt{2 \pi}} e^{-\rho(t)},
+$$
+and the (worst-case) asymptotic variance is
+$$
+    \sup_F(\psi_0, F) = V(\psi_0, F_0) =
+    \frac{(1 - \epsilon) \mathbb E_{\Phi} \psi^2 + \epsilon k^2}{\left( (1 - \epsilon) \mathbb E_{\Phi}\psi'\right)^2},
+$$
+
+\subsection{Asymptotic Relative Efficiency}
 
 \section{Differential Geometry}
 \subsection{Differentiable Manifolds}
@@ -406,22 +675,22 @@ are $M$-estimators for the functions $\rho(t) = t^2$ and $\rho(t) = |t|$, respec
 A \textbf{differentiable manifold} of dimension $n$ is a space $M$ which is locally approximated by $d$-dimensional
 Euclidean space, in such a way that allows us to do calculus on $M$. In practice, this means that to each point
 $p \in M$ we attach a \textbf{tangent space} $T_pM$, which is isomorphic (as a topological vector space) to
-$\mathbb R^n$, in such a way that calculus done on the tangent spaces can be consistently ``pushed forward'' to
+$\mathbb R^n$, in such a way that calculus done on the tangent spaces can be consistently ``transferred'' to
 the manifold. Tangent vectors are viewed as infinitesimal ``directions'' on the manifold at a given point.
-We do calculs on the tangent spaces, and the apply the results back to the manifold, analogous
+We do calculus on the tangent spaces, and the apply the results back to the manifold, analogous
 to how we do 1-D calculus by applying ``infinitesimal'' perturbations to functions and observing the change in output.
 
 Formally, we define a manifold to be a topological space $M$ satisfying some ``niceness'' conditions
 (e.g. it is Haussdorf) together with a set of \textbf{charts} $(x, U)$, where $x : U \subseteq M \to \mathbb R^n$
 is a homeomorphism, and for any two charts $(x, U)$ and $(y, V)$, the \emph{transition map}
-$y^{-1} \circ x$ is differentiable. This compatibility condition allows us to define, for
+$y \circ x^{-1}$ is differentiable. This compatibility condition allows us to define, for
 instance, a function $f: M \to \mathbb R$ to be \textbf{differentiable} if $f \circ x^{-1}$ is differentiable for
 any chart $(x, U)$.
 
 \subsubsection{The Tangent and Cotangent Bundles}
 
 Given a point $p \in M$, we can define \textbf{tangent space} $T_pM$
-as the space of equivalence classes of curves $\gamma : B(0, \epsilon) \ni 0 \to M$ with
+as the space of equivalence classes of curves $\gamma : I \ni 0 \to M$ with
 $\gamma(0) = p$, with $[\gamma_1] = [\gamma_2]$ if $(x \circ \gamma_1)'(0) = (x \circ \gamma_2)'(0)$
 for any chart $x$. We abuse notation and let $\gamma'(0)$ denote $(x \circ \gamma)'(0)$ for any chart $x$,
 since this quantity is independent of choice of chart.
@@ -467,7 +736,7 @@ is a \textbf{vector field}. The $C^{\infty}(M)$-algebra of vector fields on $M$ 
 We may view a vector field $V$ as a differentiation operator on smooth functions: $V : C^{\infty}(M) \to C^{\infty}(M)$
 via
 $$
-    (Vf)(p) = V(p)(f) = df_p(V(p)).
+    (Vf)(p) = V_p(f) = df_p(V_p).
 $$
 Dually, we may view the differential as a one-form, acting on vector fields: $df : \Gamma(TM) \to C^{\infty}(M)$ via
 $$
@@ -527,21 +796,23 @@ $x^i \in C^{\infty}(M)$ be the $i$-th coordinate of $x$, then the one-forms $dx^
 $\Gamma(T^*U)$. We let the dual basis be called $\frac{\partial}{\partial x_i} \in \Gamma(TU)$. Then the vector
 field $\frac{\partial}{\partial x_i}$ acts on $f \in C^{\infty}(U)$ by
 $$
-    \frac{\partial}{\partial x_i} f = (f \circ (t \mapsto x  + t e_i))'(0),
+    \frac{\partial}{\partial x_i} f = (f \circ (t \mapsto x^{-1}(x  + t e_i)))'(0),
 $$
-which, for a given point $p \in U$, is the usual partial derivative of $f \circ x$. We denote this quantity by
+which, for a given point $p \in U$, is the usual partial derivative of $f \circ x^{-1}$. We denote this quantity by
 $\frac{\partial f}{\partial x_i}$, in an abuse of notation. Hence any vector field $V \in \Gamma(TU)$ can be written
 as
 $$
-    V = \sum_i V^i \frac{\partial}{\partial x_i},
+    V = V^i \frac{\partial}{\partial x_i},
 $$
 acting on functions by
 $$
-    Vf = \sum_i V^i \frac{\partial f}{\partial x_i}.
+    Vf = V^i \frac{\partial f}{\partial x_i}.
 $$
+Here we use \textbf{Einstein notation}, where the sum over $i$ is implicit.
+
 Similarly, any one-form $df$ can be written as
 $$
-    df = \sum_i \frac{\partial f}{\partial x_i} dx^i.
+    df = \frac{\partial f}{\partial x_i} dx^i.
 $$
 
 The pushforward of a map $\varphi : M \to N$ is given in local coordinates by the Jacobian matrix:
@@ -599,7 +870,7 @@ $$
 
 In coordinates, this yields
 $$
-    (\mathcal L_V W)^i = \sum_j V^j \frac{\partial W_i}{\partial x_j} - W^j \frac{\partial V_i}{\partial x_j}.
+    (\mathcal L_V W)^i = V^j \frac{\partial W_i}{\partial x_j} - W^j \frac{\partial V_i}{\partial x_j}.
 $$
 
 Defining the \textbf{Lie bracket} of two vector fields via
@@ -622,7 +893,7 @@ symmetric positive-definite bilinear forms on $TM$. That is, $g \in \Gamma(T^*M 
 positive-definite. A Riemannian metric induces an inner product $g_p$ on each tangent space $T_pM$, thus endowing
 each tangent space with a notion of length and angle. In local coordinates, we can write
 $$
-    g = \sum_{ij} g_{ij} dx^i \otimes dx^j.
+    g = g_{ij} dx^i \otimes dx^j.
 $$
 
 Furthermore, a Riemannian manifold $(M, g)$ is also a \emph{length metric space}: If $\gamma : [a,b] \to M$ is
@@ -694,7 +965,9 @@ $\nabla : \Gamma(TM) \times \Gamma(TM) \to \Gamma(TM)$ satisfying
 \end{enumerate}
 Note that (1) and (2) are metric-independent; any bilinear map satisfying these is a general affine connection;
 imposing (3) and (4) gives the unique Levi-Civita connection. We generalize to non-embedded manifolds by simply
-taking these as the definition of the connection.
+taking these as the definition of the connection. The existence and uniqueness of the
+Levi-Civita connection is known as the \textbf{fundamental theorem of Riemannian
+geometry}.
 
 \subsubsection{Differentiating along Curves, Parallel Transport, and Geodesics}
 
@@ -709,7 +982,8 @@ A vector field $V$ along a curve $\gamma$ is called \textbf{parallel} if $\nabla
 The \textbf{parallel transport} of a vector $v \in T_pM$ along $\gamma$ is the unique extension of $v$
 to a parallel vector field along $\gamma$.
 
-A \textbf{geodesics} is a curve $\gamma$ for which $\nabla_{\gamma'} \gamma' = 0$.
+A \textbf{geodesic} is a curve $\gamma$ for which $\nabla_{\gamma'} \gamma' = 0$. Geodesics are the locally-shortest
+paths; if $d(p,q) = \int_a^b \sqrt{g(\gamma'(t), \gamma'(t))} dt$, then, $\gamma$ is a geodesic.
 
 \subsubsection{The Exponential Map and Normal Coordinates}
 
