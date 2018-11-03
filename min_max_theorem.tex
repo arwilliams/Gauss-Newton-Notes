@@ -1,0 +1,93 @@
+\documentclass[reqno]{amsart}
+\usepackage[toc,page]{appendix}
+
+\DeclareMathOperator*{\argmin}{arg\,min\,}
+\DeclareMathOperator*{\argmax}{arg\,max\,}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\baselineskip}
+
+\numberwithin{equation}{section}
+
+\title{The Rayleigh Quotient and Applications}
+\author{Adam Williams}
+
+\begin{document}
+
+\maketitle
+
+\section{The Rayleigh Quotient}
+
+\subsection{Definition}
+
+Let $A$ be an $n \times n$ real symmetric matrix.
+Let $R_A : \mathbb R^n \setminus \{0\} \to \mathbb R$ be the \textbf{Rayleigh
+quotient:}
+$$
+    R_A(x) = \frac{x^T Ax}{x^T x}.
+$$
+First we note that $R_A$ is invariant under scaling $(R_A(cx) = R_A(x)$, and so
+it can be viewed as function on the unit sphere:
+\begin{align*}
+    R_A : S^{n-1} \to \mathbb{R} \\
+    R_A(x) = x^T A x.
+\end{align*}
+Furthermore, $R_A(x)$ is a weighted average of eigenvalues of $A$, weighted by
+the size of the component of $x$ along each eigenvalue: Letting $\lambda_1
+\le \cdots \le \lambda_n$ be the eigenvalues of $A$, with corresponding
+(orthonormal) eigenvectors $u_1, \ldots, u_n$, we have
+\begin{equation}
+    R_A(x) = \sum_{i=1}^n \lambda_i (u_i^T x)^2,
+\label{eigen}
+\end{equation}
+where $u_i^Tx$ is the component of $x$ along $u_i$.
+
+\subsection{Stationary Points and Global Extrema}
+
+Suppose we wish to find the stationary points of $R_A$.
+Using the method of Lagrange multipliers,
+we wish to find the critical points of the Lagrange function
+$$
+    \mathcal L(x, \lambda) = R_A(x) - \lambda (x^T x - 1).
+$$
+Setting $\frac{ d \mathcal L(x)}{d x} = 0$ and straightforward calculation
+yield $Ax = \lambda x$, meaning that the eigenvectors of $A$ are the
+stationary points of $R_A$, and the corresponding eigenvalues are
+the corresponding stationary values. In particular,
+$$
+    u_n = \argmax_x R_A(x)
+$$
+and
+$$
+    \lambda_n = R_A(u_n) = \max_x R_A(x).
+$$
+In other words, the Rayleigh quotient attains its maximum value at $u_n$,
+with that value being $\lambda_n$. Similarly, $R_A$ attains its minimum
+value of $\lambda_1$ at $u_1$.
+
+Note that this can also easily be derived from (\ref{eigen}).
+
+\subsection{Stationary Points}
+
+We have shown that the maximum and minimum eigendirections maximize and
+minimize the Rayleigh quotient, respectively. Now we consider any
+eigendirection $(u_k, \lambda_k)$, and consider the subspace
+orthogonal to the higher eigendirections: $U = \operatorname{span}(u_1,
+\ldots, u_k)$. For any $x \in U$, we have $u_i^T x = 0$ for $i > k$, and
+so
+$$
+    R_A(x) = \sum_{i=1}^k \lambda_k (u_i^T x).
+$$
+Clearly, this expression is maximized when $x = u_k$, with maximum
+
+\section{Applications}
+
+\subsection{Principal Component Analysis}
+
+\subsection{Princial Curvatures}
+
+\subsection{Averaging Rotations}
+
+\subsection{Point Triangulation}
+
+\end{document}
