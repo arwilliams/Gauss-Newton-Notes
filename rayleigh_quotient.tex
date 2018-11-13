@@ -1,0 +1,172 @@
+\documentclass[reqno]{amsart}
+\usepackage[toc,page]{appendix}
+
+\DeclareMathOperator*{\argmin}{arg\,min\,}
+\DeclareMathOperator*{\argmax}{arg\,max\,}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\baselineskip}
+
+\numberwithin{equation}{section}
+
+\title{The Rayleigh Quotient and Applications}
+\author{Adam Williams}
+
+\begin{document}
+
+\maketitle
+
+\section{The Rayleigh Quotient}
+
+\subsection{Definition}
+
+Let $A$ be an $n \times n$ real symmetric matrix.
+Let $R_A : \mathbb R^n \setminus \{0\} \to \mathbb R$ be the \textbf{Rayleigh
+quotient:}
+$$
+    R_A(x) = \frac{x^T Ax}{x^T x}.
+$$
+Note that $R_A$ is invariant under scaling ($R_A(cx) = R_A(x)$), and so
+it can be viewed as function on the unit sphere:
+\begin{align*}
+    R_A : S^{n-1} \to \mathbb{R} \\
+    R_A(x) = x^T A x.
+\end{align*}
+Furthermore, $R_A(x)$ is a weighted average of eigenvalues of $A$, weighted by
+the size of the component of $x$ along each eigenvalue: Letting $\lambda_1
+\le \cdots \le \lambda_n$ be the eigenvalues of $A$, with corresponding
+(orthonormal) eigenvectors $u_1, \ldots, u_n$, we have
+\begin{equation}
+    R_A(x) = \sum_{i=1}^n \lambda_i (u_i^T x)^2,
+\label{eigen}
+\end{equation}
+where $u_i^Tx$ is the component of $x$ along $u_i$.
+
+\subsection{Stationary Points and Global Extrema}
+
+Suppose we wish to find the stationary points of $R_A$.
+Using the method of Lagrange multipliers,
+we wish to find the critical points of the Lagrange function
+$$
+    \mathcal L(x, \lambda) = R_A(x) - \lambda (x^T x - 1).
+$$
+Setting $\frac{ d \mathcal L(x)}{d x} = 0$ and straightforward calculation
+yield $Ax = \lambda x$, meaning that the eigenvectors of $A$ are the
+stationary points of $R_A$, and the corresponding eigenvalues are
+the corresponding stationary values. In particular,
+$$
+    u_n = \argmax_x R_A(x)
+$$
+and
+$$
+    \lambda_n = R_A(u_n) = \max_x R_A(x).
+$$
+In other words, the Rayleigh quotient attains its maximum value at $u_n$,
+with that value being $\lambda_n$. Similarly, $R_A$ attains its minimum
+value of $\lambda_1$ at $u_1$.
+
+Note that this can also easily be derived from (\ref{eigen}).
+
+\subsection{Generalizing to any Eigendirection}
+
+We have shown that the maximum and minimum eigendirections maximize and
+minimize the Rayleigh quotient, respectively, with maximum and minimum
+values being the corresponding eigenvalues.
+Now we consider any
+eigendirection $u_k$, and consider the subspace
+orthogonal to the higher eigendirections: $U = \operatorname{span}(u_1,
+\ldots, u_k)$. Since eigenspaces for $A$ are invariant under $A$,
+we can consider the restricted linear map $x \mapsto Ax$ from $U$ to $U$,
+and its associated matrix $\left.A\right|_U$. Clearly, the eigenvalues of
+$\left.A\right|_U$ are $\lambda_1, \ldots, \lambda_k$, and we can
+recursively apply our analysis to $R_{\left.A\right|_U}$ to see that
+$R_{\left.A\right|_U}$ attains its maximum value $\lambda_k$ along $u_k$.
+
+Hence, $u_k$ is the maximizer of $R_A$, with maximum value $\lambda_k$,
+after removing all higher eigendirections.
+
+\section{Applications}
+
+\subsection{Principal Component Analysis}
+
+Let $X : \Omega \to \mathbb R^n$ be a random variable with $\mathbb E X = 0$,
+and let
+$\Sigma = \mathbb E\left[ XX^T\right]$ be the variance of $X$. \textbf{Principal
+component analysis} is the process of constructing an orthonormal basis
+$u_1, \ldots, u_n$ for $\mathbb R^n$ such that $u_k$ is the direction of
+$k$-th highest variance of $X$.
+
+Let $v \in \mathbb R^n$ ($\|v\|_2^2 = 1$) be any direction. Then the
+projection of $X$ along $v$ is the random variable $v^TX$, and its variance
+is given by
+$$
+    \mathbb E \left[(v^TX)(v^TX)^T\right] = \mathbb E \left[v^T X X^T v\right]
+        = v^T  \mathbb E\left[ XX^T \right] v = v^T \Sigma v.
+$$
+Hence the desired orthonormal basis is given by the orthonormal set of
+eigenvectors for $\Sigma$, which necessarily exists because $\Sigma$ is
+a symmetric, positive-semidefinite matrix.
+
+Note also that the projections $u_k X$ are \emph{uncorrelated}, since
+$$
+    \mathbb E\left[( u_k^T X) (u_l^TX)\right] = u_k^T \Sigma u_l = 0,
+$$
+for $k \ne l$.
+
+\subsection{Principal Curvatures}
+
+Let $f : \mathbb R^n \to \mathbb R$ be $C^2$,
+and let $H = \frac{\partial f}{\partial xx^T}$ denote
+the Hessian matrix. Then the mapping $(v, w) \mapsto v^T H w$ is the second
+derivative of $f$, and in particular, $v \mapsto v ^T H v$ is the second directional
+derivative of $f$ along $v$:
+$$
+    v^T H v = \left.\frac{d^2}{dt^2}\right|_{t=0} f(x + tv).
+$$
+
+Hence, we can, at any point $x \in \mathbb R^n$, construct an orthonormal
+basis at $x$ maximizing the second derivative of $f$ along each direction.
+Considering the graph of $f$ as a hypersurface in $\mathbb R^{n+1}$,
+the eigenvectors at each point 
+are called the \textbf{principal directions}
+of the surface, and their
+corresponding eigenvalues are the \textbf{principal curvatures}.
+
+When $n = 2$, the graph is a surface, and the product of the principal
+curvatures, or $\det H$, is the called the \textbf{Gaussian curvature} of the
+surface.
+
+\subsection{Averaging Rotations}
+
+\subsection{Multiple-View Triangulation}
+
+Let $X \in \mathbb R^4$ be the homogeneous coordinates of a 3D projective
+point, and for $i = 1, \ldots, n$, let $P_i \in \mathbb R^{3 \times 4}$
+be a projection matrix and $x_i \in \mathbb R^3$ the homogeneous coordinates
+of a point observation of $X$. Suppose we wish to find the value $X^*$ of $X$
+minimizing the \emph{reprojection error} across all observations. One way
+that we may define the $i$-th reprojection error is by projecting $P_i X$
+along $x_i$ and taking the difference:
+$$
+    X^* = \argmin_{x \in \mathbb R^4} \sum_{i=1}^n
+        \left\| P_i X - x_i x_i^T P_i X \right\|_2^2.
+$$
+
+Algebraic manipulation shows that this expression is equivalent to
+$$
+    X^* = \argmin_{X \in \mathbb R^4} X^T A X,
+$$
+where
+$$
+    A = \sum_{i=1}^n A_i^TA_i,
+$$
+where
+$$
+    A_i = P_i - x_i x_i^T P_i.
+$$
+Hence the optimal value $X^*$ is the eigenvector corresponding to the
+smallest eigenvalue of the symmetric, positive-semidefinite matrix $A$.
+
+This technique is used by the COLMAP structure-from-motion library.
+
+\end{document}
